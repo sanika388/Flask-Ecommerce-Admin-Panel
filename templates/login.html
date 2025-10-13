@@ -1,0 +1,76 @@
+<!-- templates/login.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen flex flex-col items-center justify-center p-4"
+    style="
+        /* Tailwind classes using custom colors */
+        background-color: #6a0dad; 
+        /* Match the image's background people/office setting */
+        background-image: linear-gradient(rgba(106, 13, 173, 0.7), rgba(106, 13, 173, 0.7)), 
+                             url('https://images.unsplash.com/photo-1542831371-29b1f74f6713?fit=crop&w=1500&q=80'); 
+        background-size: cover;
+        background-position: center;
+    "
+>
+
+    <div class="bg-white p-10 rounded-xl shadow-login max-w-sm w-full">
+        <div class="text-center mb-6">
+            <div class="text-3xl font-bold text-royal-purple flex items-center justify-center">
+                <i class="fas fa-chart-line mr-2"></i> ADMIN
+            </div>
+            <small class="text-sm font-light text-gray-500 block">Central Management Interface</small>
+        </div>
+
+        {% if error %}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4" role="alert">
+            <span class="block sm:inline">{{ error }}</span>
+        </div>
+        {% endif %}
+
+        <!-- REMOVED DUPLICATE HEADER HERE -->
+        <h5 class="text-xl font-semibold mb-6 text-center text-gray-800">Secure Access</h5>
+        <form method="POST" action="{{ url_for('login') }}">
+            
+            <div class="mb-4">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                        <i class="fas fa-user"></i>
+                    </span>
+                    <input type="email" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-royal-purple focus:border-royal-purple outline-none transition duration-150" name="username" placeholder="Username or Email" required>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                        <i class="fas fa-lock"></i>
+                    </span>
+                    <input type="password" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-royal-purple focus:border-royal-purple outline-none transition duration-150" name="password" placeholder="Password" required>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center text-sm mb-6">
+                <div class="flex items-center">
+                    <input type="checkbox" id="rememberMe" class="h-4 w-4 text-royal-purple border-gray-300 rounded focus:ring-royal-purple">
+                    <label for="rememberMe" class="ml-2 text-gray-600">Remember me</label>
+                </div>
+                <a href="#" class="text-royal-purple hover:text-light-purple transition duration-150">Forgot Password?</a>
+            </div>
+            
+            <button type="submit" class="w-full bg-royal-purple text-white font-semibold py-3 rounded-lg hover:bg-light-purple transition duration-200">
+                LOGIN
+            </button>
+        </form>
+
+        <p class="text-xs text-gray-500 mt-6 text-center">Powered by [Your Application Name]</p>
+    </div>
+
+    <div class="absolute bottom-4 left-4 flex space-x-4 text-lg text-white">
+        <i class="fas fa-globe"></i>
+        <i class="fab fa-whatsapp"></i>
+        <i class="fas fa-clock"></i>
+        <i class="fas fa-envelope"></i>
+    </div>
+</div>
+{% endblock %}

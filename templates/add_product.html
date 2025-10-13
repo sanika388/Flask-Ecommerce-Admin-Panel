@@ -1,0 +1,269 @@
+{% extends "layout.html" %}
+
+{% block page_content %}
+<h1 class="text-3xl font-bold text-gray-800 mb-6">Add New Product</h1>
+
+<div class="bg-white p-6 rounded-xl shadow-card">
+    
+    <form method="POST" action="{{ url_for('add_product') }}" enctype="multipart/form-data">
+        
+        <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Core Information </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="mb-4">
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                <input type="text" id="name" name="name" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-royal-purple focus:border-royal-purple transition duration-150"
+                        value="{{ name if name is not none else '' }}">
+            </div>
+            
+            <div class="mb-4">
+                <label for="sku" class="block text-sm font-medium text-gray-700 mb-1">SKU (Unique Identifier)</label>
+                <input type="text" id="sku" name="sku" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-royal-purple focus:border-royal-purple transition duration-150"
+                        value="{{ sku if sku is not none else '' }}">
+            </div>
+            
+            <div class="mb-4">
+                <label for="price" class="block text-sm font-medium text-gray-700 mb-1">Base Price ($)</label>
+                <input type="number" step="0.01" id="price" name="price" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-royal-purple focus:border-royal-purple transition duration-150"
+                        value="{{ price if price is not none else '' }}">
+            </div>
+            
+            <div class="mb-4">
+                <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <select id="category_id" name="category_id"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-royal-purple focus:border-royal-purple transition duration-150">
+                    <option value="">-- Select Category --</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if category_id and category_id == category.id %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea id="description" name="description" rows="4"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-royal-purple focus:border-royal-purple transition duration-150">{{ description if description is not none else '' }}</textarea>
+        </div>
+
+        <div class="mb-6 form-check p-3 border border-gray-200 rounded-lg bg-gray-50">
+            <input type="checkbox" class="form-check-input h-4 w-4 text-royal-purple border-gray-300 rounded focus:ring-royal-purple" 
+                   id="is_featured" name="is_featured">
+            <label class="form-check-label ml-2 text-sm font-semibold text-gray-700" for="is_featured">
+                **Feature this Product**
+            </label>
+            <p class="form-text text-xs text-gray-500 mt-1 ml-6">Check this box to highlight this product on the homepage or in promotions.</p>
+        </div>
+        <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-8">Product Variants (Sizes, Colors, etc.)</h2>
+        
+        <div class="mb-4">
+            <label for="variant_option_name" class="block text-sm font-medium text-gray-700 mb-1">Variant Option Name (e.g., Size, Color, Style)</label>
+            <input type="text" id="variant_option_name" name="variant_option_name" 
+                    placeholder="e.g. Size, Color, or leave blank if no variants are needed."
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-royal-purple focus:border-royal-purple transition duration-150">
+        </div>
+        
+        <div id="variants-container" class="space-y-4 mb-6">
+            <p id="no-variants-message" class="text-gray-500 text-sm italic">No variants added yet. Click 'Add Variant' to begin.</p>
+        </div>
+        
+        <button type="button" id="add-variant-btn" 
+                class="bg-gray-200 text-gray-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-200">
+            <i class="fas fa-plus mr-1"></i> Add Variant
+        </button>
+        
+        <p class="text-xs text-gray-500 mt-2 mb-8">
+            Note: If you add variants, the base 'Initial Stock Quantity' field is ignored. Stock is managed per variant.
+        </p>
+
+
+        <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-8">Images & Media</h2>
+        <div id="images-container" class="space-y-4 mb-6">
+            <div class="image-row p-4 border rounded-lg bg-gray-50 grid grid-cols-12 gap-4 items-center" data-id="0">
+                <div class="col-span-12">
+                    <label for="image_file_0" class="block text-sm font-medium text-gray-700 mb-1">Primary Image (Order 1 - Required)</label>
+                    <input type="file" name="image_files" id="image_file_0" accept=".png, .jpg, .jpeg, .gif" required
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-royal-purple focus:border-royal-purple sm:text-sm transition duration-150">
+                    <input type="hidden" name="image_orders" value="1"> 
+                </div>
+            </div>
+        </div>
+
+        <button type="button" id="add-image-btn" 
+                class="bg-gray-200 text-gray-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-200">
+            <i class="fas fa-image mr-1"></i> Add Another Image
+        </button>
+
+        <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 mt-8">Inventory (Fallback/Base)</h2>
+        <div class="mb-6">
+            <label for="stock" class="block text-sm font-medium text-gray-700 mb-1">Initial Stock Quantity (Only used if no variants added)</label>
+            <input type="number" id="stock" name="stock" min="0"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-royal-purple focus:border-royal-purple transition duration-150"
+                    value="{{ stock if stock is not none else 0 }}">
+        </div>
+
+        
+        <div class="flex justify-end space-x-3 pt-6 border-t mt-6">
+            <a href="{{ url_for('products') }}" class="py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-200 font-semibold">
+                Cancel
+            </a>
+            
+            <button type="submit" class="bg-royal-purple text-white font-semibold py-2 px-4 rounded-lg hover:bg-light-purple transition duration-200">
+                Create Product
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let uniqueVariantId = 0; 
+        let activeVariantIds = [];
+        let imageCount = 1;
+
+        const variantsContainer = document.getElementById('variants-container');
+        const noVariantsMessage = document.getElementById('no-variants-message');
+        const addVariantBtn = document.getElementById('add-variant-btn');
+
+        const imagesContainer = document.getElementById('images-container');
+        const addImageBtn = document.getElementById('add-image-btn');
+
+        // Function to update variant message visibility
+        function updateVariantMessage() {
+            const variantRows = variantsContainer.querySelectorAll('.variant-row');
+            noVariantsMessage.style.display = variantRows.length === 0 ? 'block' : 'none';
+        }
+
+        // ------------------ Variant Functions ------------------
+        function addVariantRow() {
+            uniqueVariantId++;
+            activeVariantIds.push(uniqueVariantId);
+            updateVariantMessage();
+
+            const newRow = document.createElement('div');
+            newRow.classList.add('variant-row', 'p-4', 'border', 'rounded-lg', 'bg-gray-50', 'grid', 'grid-cols-12', 'gap-4', 'items-center');
+            newRow.dataset.id = uniqueVariantId;
+
+            newRow.innerHTML = `
+                <div class="col-span-5">
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Variant Value (e.g. Small, Red)</label>
+                    <input type="text" name="variant_value_${uniqueVariantId}" placeholder="e.g. Small, Red" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-royal-purple focus:border-royal-purple">
+                </div>
+                <div class="col-span-3">
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Stock</label>
+                    <input type="number" name="variant_stock_${uniqueVariantId}" placeholder="0" value="0" required min="0"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-royal-purple focus:border-royal-purple">
+                </div>
+                <div class="col-span-3">
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Price Adj. ($)</label>
+                    <input type="number" step="0.01" name="variant_price_adj_${uniqueVariantId}" placeholder="0.00" value="0.00"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-royal-purple focus:border-royal-purple">
+                </div>
+                <div class="col-span-1 text-center self-end pb-2">
+                    <button type="button" class="remove-variant-btn text-red-600 hover:text-red-800 transition duration-150" data-id="${uniqueVariantId}" title="Remove Variant">
+                        <i class="fas fa-trash-alt text-lg"></i>
+                    </button>
+                </div>
+            `;
+            variantsContainer.appendChild(newRow);
+        }
+
+        function removeVariantRow(id) {
+            const row = variantsContainer.querySelector(`.variant-row[data-id="${id}"]`);
+            if (row) {
+                variantsContainer.removeChild(row);
+                activeVariantIds = activeVariantIds.filter(v_id => v_id != id);
+                updateVariantMessage();
+            }
+        }
+
+        addVariantBtn.addEventListener('click', addVariantRow);
+        variantsContainer.addEventListener('click', function(e) {
+            const btn = e.target.closest('.remove-variant-btn');
+            if (btn) {
+                const id = btn.dataset.id;
+                removeVariantRow(id);
+            }
+        });
+
+        // ------------------ Image Functions ------------------
+        
+        function updateImageOrder() {
+            const orderInputs = imagesContainer.querySelectorAll('input[name="image_orders"]');
+            orderInputs.forEach((input, index) => {
+                input.value = index + 1; 
+            });
+        }
+
+        function addImageRow() {
+            const currentId = imageCount++; 
+            const newRow = document.createElement('div');
+            newRow.classList.add('image-row', 'p-4', 'border', 'rounded-lg', 'bg-gray-50', 'grid', 'grid-cols-12', 'gap-4', 'items-center', 'mt-4'); 
+            newRow.dataset.id = currentId;
+
+            newRow.innerHTML = `
+                <div class="col-span-11">
+                    <label for="image_file_${currentId}" class="block text-sm font-medium text-gray-700 mb-1">Additional Image</label>
+                    <input type="file" name="image_files" id="image_file_${currentId}" accept=".png, .jpg, .jpeg, .gif" required
+                           class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-royal-purple focus:border-royal-purple sm:text-sm transition duration-150">
+                    <input type="hidden" name="image_orders" value="">
+                </div>
+                <div class="col-span-1 text-center self-end pb-2">
+                    <button type="button" class="remove-image-btn text-red-600 hover:text-red-800 transition duration-150" data-id="${currentId}" title="Remove Image">
+                        <i class="fas fa-trash-alt text-lg"></i>
+                    </button>
+                </div>
+            `;
+            imagesContainer.appendChild(newRow);
+            updateImageOrder();
+        }
+
+        function removeImageRow(id) {
+            if (id == 0) return; 
+
+            const row = imagesContainer.querySelector(`.image-row[data-id="${id}"]`);
+            if (row) {
+                imagesContainer.removeChild(row);
+                updateImageOrder();
+            }
+        }
+
+        addImageBtn.addEventListener('click', addImageRow);
+        imagesContainer.addEventListener('click', function(e) {
+            const btn = e.target.closest('.remove-image-btn');
+            if (btn) {
+                const id = btn.dataset.id;
+                removeImageRow(id);
+            }
+        });
+        
+        // Form submission logic to include active variant IDs
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            // Remove previous hidden input if it exists
+            let hiddenInput = document.getElementById('variant-indices-input');
+            if (hiddenInput) {
+                form.removeChild(hiddenInput);
+            }
+
+            // Add new hidden input with the list of active variant IDs
+            hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'variant_indices';
+            hiddenInput.id = 'variant-indices-input';
+            hiddenInput.value = activeVariantIds.join(',');
+            form.appendChild(hiddenInput);
+        });
+
+        updateVariantMessage();
+    });
+
+</script>
+
+{% endblock %}

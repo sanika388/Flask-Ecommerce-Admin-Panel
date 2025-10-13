@@ -1,0 +1,28 @@
+{% extends "email/alert_base.html" %}
+
+{% block content %}
+<p>This is an urgent alert regarding the stock level of a product you manage.</p>
+
+<table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 15px;">
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Product Name:</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ product_name }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">SKU:</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">{{ product_sku }}</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Current Stock:</td>
+        <td class="highlight" style="padding: 8px; border: 1px solid #ddd;">{{ stock_level }} units</td>
+    </tr>
+    <tr>
+        <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Threshold:</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">Below {{ threshold }} units</td>
+    </tr>
+</table>
+
+<p>
+    Please take immediate action to replenish the stock for this product to prevent service interruption.
+</p>
+{% endblock %}

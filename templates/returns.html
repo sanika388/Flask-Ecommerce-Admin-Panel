@@ -1,0 +1,92 @@
+{% extends "layout.html" %}
+
+{% block page_content %}
+
+<div class="space-y-6">
+    
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-800">{{ page_title }}</h1>
+    </div>
+
+    <form method="GET" action="{{ url_for('returns_management') }}" class="bg-white p-4 rounded-xl shadow-sm flex space-x-4 items-center">
+        <div class="flex-grow">
+            <label for="status" class="sr-only">Filter by Status</label>
+            <select id="status" name="status" class="block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:ring-royal-purple focus:border-royal-purple">
+                <option value="all" {% if current_status_filter == 'all' %}selected{% endif %}>All Statuses</option>
+                {% for status in status_options %}
+                <option value="{{ status }}" {% if current_status_filter == status %}selected{% endif %}>{{ status }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <button type="submit" class="bg-royal-purple text-white py-2 px-4 rounded-lg font-medium hover:bg-purple-700 transition duration-150">
+                Filter
+            </button>
+        </div>
+        {% if current_status_filter != 'all' or page != 1 %}
+        <div>
+            <a href="{{ url_for('returns_management') }}" class="text-sm text-gray-500 hover:text-gray-700 underline">Clear Filters</a>
+        </div>
+        {% endif %}
+    </form>
+    
+    <div class="bg-white p-6 rounded-xl shadow-lg overflow-x-auto">
+        {% if returns %}
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Return #</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order #</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Refund Amount</th>
+                    <th class="px-6 py-3"></th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for r in returns %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-royal-purple">
+                        {{ r.id }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <a href="{{ url_for('order_details', order_id=r.order_id) }}" class="hover:underline text-blue-600">{{ r.order_id }}</a>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ r.user_name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ r.return_date.strftime('%Y-%m-%d') }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ r.item_count }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        {% set status_color = 
+                            'bg-yellow-100 text-yellow-800' if r.return_status == 'Requested' else
+                            'bg-blue-100 text-blue-800' if r.return_status == 'In Transit' else
+                            'bg-indigo-100 text-indigo-800' if r.return_status == 'Received' else
+                            'bg-purple-100 text-purple-800' if r.return_status == 'Processing' else
+                            'bg-green-100 text-green-800' if r.return_status == 'Refunded' else
+                            'bg-red-100 text-red-800' %}
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ status_color }}">
+                            {{ r.return_status }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${{ r.refund_amount | default(0.00) | round(2) }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <a href="{{ url_for('return_details', return_id=r.id) }}" class="text-royal-purple hover:text-purple-700">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% include 'includes/_pagination.html' with context %}
+        
+        {% else %}
+        <div class="p-4 text-center text-gray-500">
+            No returns found for the selected filter.
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+{% endblock %}

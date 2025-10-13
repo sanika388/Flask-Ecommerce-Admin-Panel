@@ -1,0 +1,108 @@
+{% extends "layout.html" %}
+
+{% block page_content %}
+
+{% set is_edit = is_edit if is_edit is defined else false %}
+{% set form_data = form_data if form_data is defined else {} %}
+
+<div class="space-y-6">
+    
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-800">{{ page_title }}</h1>
+        <a href="{{ url_for('discounts') }}" class="text-royal-purple hover:text-purple-700 font-medium flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i> 
+            Back to Discounts List
+        </a>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow-lg max-w-4xl mx-auto">
+        
+        <form method="POST" action="{{ url_for('edit_discount', discount_id=form_data.id) if is_edit else url_for('add_discount') }}">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <div>
+                    <label for="code" class="block text-sm font-medium text-gray-700">Discount Code <span class="text-red-500">*</span></label>
+                    <input type="text" id="code" name="code" value="{{ form_data.code | default('') }}" required 
+                           class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-royal-purple focus:border-royal-purple"
+                           placeholder="E.g., SUMMER20">
+                    <p class="mt-1 text-xs text-gray-500">Must be unique and is case-insensitive (stored uppercase).</p>
+                </div>
+
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description (Internal)</label>
+                    <input type="text" id="description" name="description" value="{{ form_data.description | default('') }}" 
+                           class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-royal-purple focus:border-royal-purple"
+                           placeholder="20% off all apparel">
+                </div>
+                
+                <div>
+                    <label for="type" class="block text-sm font-medium text-gray-700">Discount Type <span class="text-red-500">*</span></label>
+                    <select id="type" name="type" required 
+                            class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-royal-purple focus:border-royal-purple">
+                        <option value="percentage" {% if form_data.type == 'percentage' %}selected{% endif %}>Percentage (%) Discount</option>
+                        <option value="fixed" {% if form_data.type == 'fixed' %}selected{% endif %}>Fixed Amount ($) Discount</option>
+                        <option value="free_shipping" {% if form_data.type == 'free_shipping' %}selected{% endif %}>Free Shipping</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="value" class="block text-sm font-medium text-gray-700">Value <span class="text-red-500">*</span></label>
+                    <input type="number" step="0.01" min="0" id="value" name="value" value="{{ form_data.value | default(0.00) }}" required
+                           class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-royal-purple focus:border-royal-purple"
+                           placeholder="E.g., 20.00 or 15.50">
+                    <p class="mt-1 text-xs text-gray-500">Value based on Type (e.g., 20.00 is 20% or $20).</p>
+                </div>
+
+                <div>
+                    <label for="min_purchase_amount" class="block text-sm font-medium text-gray-700">Minimum Purchase ($)</label>
+                    <input type="number" step="0.01" min="0" id="min_purchase_amount" name="min_purchase_amount" value="{{ form_data.min_purchase_amount | default(0.00) }}"
+                           class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-royal-purple focus:border-royal-purple">
+                </div>
+
+                <div>
+                    <label for="max_usage" class="block text-sm font-medium text-gray-700">Max Uses (Total)</label>
+                    <input type="number" min="1" id="max_usage" name="max_usage" value="{{ form_data.max_usage | default('') }}"
+                           class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-royal-purple focus:border-royal-purple"
+                           placeholder="Leave blank for unlimited">
+                    {% if is_edit %}
+                        <p class="mt-1 text-xs text-gray-500">Used: {{ form_data.used_count | default(0) }} times</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="start_date" class="block text-sm font-medium text-gray-700">Start Date <span class="text-red-500">*</span></label>
+                    <input type="date" id="start_date" name="start_date" value="{{ form_data.start_date | default(today) }}" required
+                           class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-royal-purple focus:border-royal-purple">
+                </div>
+                
+                <div>
+                    <label for="expiry_date" class="block text-sm font-medium text-gray-700">Expiry Date (Optional)</label>
+                    <input type="date" id="expiry_date" name="expiry_date" value="{{ form_data.expiry_date | default('') }}"
+                           class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-royal-purple focus:border-royal-purple">
+                </div>
+                
+            </div>
+            
+            <div class="mt-6 border-t pt-4">
+                <div class="flex items-center">
+                    <input id="is_active" name="is_active" type="checkbox" 
+                           class="h-4 w-4 text-royal-purple border-gray-300 rounded focus:ring-royal-purple"
+                           {% if form_data.is_active is defined and form_data.is_active or form_data.is_active is not defined %}checked{% endif %}>
+                    <label for="is_active" class="ml-2 block text-sm font-medium text-gray-700">
+                        Is Active
+                    </label>
+                </div>
+                <p class="mt-1 text-xs text-gray-500">Uncheck to manually disable this code.</p>
+            </div>
+            
+            <div class="mt-8">
+                <button type="submit" class="w-full bg-royal-purple text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition duration-150 shadow-md">
+                    <i class="fas fa-save mr-2"></i> {{ 'Update Discount' if is_edit else 'Create Discount' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

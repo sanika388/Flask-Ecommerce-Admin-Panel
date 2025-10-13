@@ -1,0 +1,30 @@
+<header class="bg-white shadow-sm h-20 flex items-center justify-between px-6 border-b border-gray-200 sticky top-0 z-10">
+    
+    <div class="flex items-center space-x-4">
+        <button id="sidebar-toggle" class="text-gray-600 hover:text-royal-purple focus:outline-none transition duration-150 text-xl">
+            <i class="fas fa-bars"></i>
+        </button>
+    <form action="{{ url_for('search') }}" method="GET" class="hidden md:block">
+        <input type="text" 
+               name="q" 
+               placeholder="Search..." 
+               class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:border-royal-purple focus:ring-1 focus:ring-royal-purple transition duration-150">
+        <button type="submit" class="hidden"></button>
+    </form>
+</div>
+    <div class="flex items-center space-x-6"> 
+        
+        <div class="flex items-center space-x-2">
+            <span class="text-sm font-medium text-gray-700">
+                {% if session.name %}{{ session.name.split(' ')[0] }}{% else %}Admin{% endif %}
+            </span>
+            <i class="fas fa-user-circle text-2xl text-royal-purple"></i>
+        </div>
+        
+        <a href="{{ url_for('logout') }}" class="flex items-center space-x-2 cursor-pointer text-sm font-semibold text-red-600 hover:text-red-800 transition duration-150">
+            <i class="fas fa-sign-out-alt"></i> 
+            <span class="hidden sm:inline">Logout</span>
+        </a>
+        
+    </div>
+</header>

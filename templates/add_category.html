@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto">
+    <div class="mb-6 border-b pb-4">
+        <h1 class="text-3xl font-extrabold text-gray-900">{{ page_title }}</h1>
+        <p class="text-sm text-gray-500 mt-1">Create a new product category or subcategory for organization.</p>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="mb-4 p-4 rounded-lg text-sm {% if category == 'success' %}bg-green-100 text-green-700{% elif category == 'warning' %}bg-yellow-100 text-yellow-700{% else %}bg-red-100 text-red-700{% endif %}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="bg-white shadow-xl rounded-xl p-6 sm:p-8">
+        <form method="POST" action="{{ url_for('add_category') }}">
+            
+            <div class="space-y-6">
+                
+                <!-- Category Name -->
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700">Category Name</label>
+                    <div class="mt-1">
+                        <input type="text" name="name" id="name" required
+                               class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                               placeholder="e.g., Electronics, T-Shirts, Cameras">
+                    </div>
+                </div>
+
+                <!-- Parent Category (for Subcategories) -->
+                <div>
+                    <label for="parent_id" class="block text-sm font-medium text-gray-700">Parent Category (Optional)</label>
+                    <p class="text-xs text-gray-500 mb-2">Select a parent category if this is a subcategory.</p>
+                    <div class="mt-1">
+                        <select id="parent_id" name="parent_id"
+                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            <option value="">-- No Parent (Top-Level Category) --</option>
+                            {% for cat in all_categories %}
+                                <option value="{{ cat.id }}">{{ cat.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-end pt-4 border-t mt-6">
+                    <a href="{{ url_for('categories') }}" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition duration-150 mr-3">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg shadow-md hover:bg-indigo-700 transition duration-150">
+                        Create Category
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

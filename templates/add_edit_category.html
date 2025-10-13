@@ -1,0 +1,55 @@
+<!-- Extend your base layout, likely 'layout.html' -->
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow-lg border-0 rounded-lg mt-5">
+            <div class="card-header bg-primary text-white">
+                <h3 class="text-center my-2">{{ page_title }}</h3>
+            </div>
+            <div class="card-body">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form method="POST">
+                    <!-- Category Name Field -->
+                    <div class="form-group mb-3">
+                        <label for="name" class="form-label font-weight-bold">Category Name</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               value="{{ category.name if is_edit else '' }}" 
+                               placeholder="e.g., Electronics, Clothing" required>
+                    </div>
+
+                    <!-- NEW: Parent Category Dropdown for Hierarchy -->
+                    <div class="form-group mb-4">
+                        <label for="parent_id" class="form-label font-weight-bold">Parent Category (Optional)</label>
+                        <select class="form-control" id="parent_id" name="parent_id">
+                            <option value="0">--- No Parent (Top-Level Category) ---</option>
+                            {% for cat in categories_for_dropdown %}
+                                <option value="{{ cat.id }}" 
+                                        {% if is_edit and cat.id == category.parent_id %}selected{% endif %}>
+                                    {{ cat.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted">Select an existing category to make this a subcategory.</small>
+                    </div>
+                    <!-- END NEW -->
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fas fa-save"></i> {{ 'Update Category' if is_edit else 'Add Category' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

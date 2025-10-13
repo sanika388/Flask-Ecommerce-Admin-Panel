@@ -1,0 +1,63 @@
+<aside id="sidebar" class="bg-royal-purple w-64 flex flex-col transition-all duration-300 flex-shrink-0 shadow-lg">
+    
+    <div class="py-4 px-6 flex items-center h-20">
+        <div class="text-white text-2xl font-bold flex items-center">
+            <i class="fas fa-chart-line mr-2"></i> 
+            <span class="nav-text">ADMIN</span>
+        </div>
+    </div>
+    
+    <nav class="flex-grow p-4 space-y-2 overflow-y-auto">
+        
+        <a href="{{ url_for('dashboard') }}" class="flex items-center p-3 rounded-lg text-white font-medium transition duration-150 
+            {% if active_page == 'dashboard' %}bg-light-purple shadow-md{% else %}hover:bg-light-purple{% endif %}">
+            <i class="fas fa-tachometer-alt w-6"></i>
+            <span class="nav-text ml-4">Dashboard</span>
+        </a>
+
+        <a href="{{ url_for('users') }}" class="flex items-center p-3 rounded-lg text-white font-medium transition duration-150 
+            {% if active_page == 'users' %}bg-light-purple shadow-md{% else %}hover:bg-light-purple{% endif %}">
+            <i class="fas fa-users w-6"></i>
+            <span class="nav-text ml-4">Users</span>
+        </a>
+
+        <a href="{{ url_for('products') }}" class="flex items-center p-3 rounded-lg text-white font-medium transition duration-150 
+            {% if active_page == 'products' or active_page == 'reviews' %}bg-light-purple shadow-md{% else %}hover:bg-light-purple{% endif %}">
+            <i class="fas fa-box-open w-6"></i>
+            <span class="nav-text ml-4">Products</span>
+        </a>
+        
+        <a href="{{ url_for('discounts') }}" class="flex items-center p-3 rounded-lg text-white font-medium transition duration-150 
+            {% if active_page == 'discounts' %}bg-light-purple shadow-md{% else %}hover:bg-light-purple{% endif %}">
+            <i class="fas fa-percent w-6"></i> 
+            <span class="nav-text ml-4">Discounts</span>
+        </a>
+        
+        <a href="{{ url_for('orders') }}" class="flex items-center p-3 rounded-lg text-white font-medium transition duration-150 
+            {% if active_page == 'orders' %}bg-light-purple shadow-md{% else %}hover:bg-light-purple{% endif %}">
+            <i class="fas fa-shopping-cart w-6"></i>
+            <span class="nav-text ml-4">Orders</span>
+        </a>
+
+        <a href="{{ url_for('returns_management') }}" class="flex items-center p-3 rounded-lg text-white font-medium transition duration-150 
+            {% if active_page == 'returns' %}bg-light-purple shadow-md{% else %}hover:bg-light-purple{% endif %}">
+            <i class="fas fa-undo w-6"></i> 
+            <span class="nav-text ml-4">Returns</span>
+        </a>
+        
+        <a href="{{ url_for('settings') }}" class="flex items-center p-3 rounded-lg text-white font-medium transition duration-150 
+            {% if active_page == 'settings' %}bg-light-purple shadow-md{% else %}hover:bg-light-purple{% endif %}">
+            <i class="fas fa-cog w-6"></i>
+            <span class="nav-text ml-4">Settings</span>
+        </a>
+        
+    </nav>
+ 
+    <div class="p-4 border-t border-purple-700">
+        <div class="flex justify-start space-x-4 text-white text-lg">
+            <i class="fas fa-lock cursor-pointer hover:text-light-purple" title="Profile/Logout"></i>
+            <i class="fas fa-bell cursor-pointer hover:text-light-purple" title="Notifications"></i>
+            <i class="fas fa-envelope cursor-pointer hover:text-light-purple" title="Messages"></i>
+        </div>
+    </div>
+</aside>

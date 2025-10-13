@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global style for sidebar transition */
+.sidebar-closed {
+    width: 60px !important; 
+    transition: width 0.3s ease-in-out;
+}
+
+.sidebar-closed .nav-text {
+    display: none;
+}

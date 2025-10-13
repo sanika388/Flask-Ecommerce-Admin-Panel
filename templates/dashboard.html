@@ -1,0 +1,152 @@
+{% extends "layout.html" %}
+
+{% block page_content %}
+<h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard & Analytics</h1>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    
+    <div class="bg-white p-6 rounded-xl shadow-card flex items-start justify-between">
+        <div>
+            <p class="text-sm font-medium text-gray-500">Total Users</p>
+            <p class="text-3xl font-bold text-gray-900">12,450</p>
+            <p class="text-sm font-semibold text-green-500">+12% this week</p>
+        </div>
+        <i class="fas fa-user-friends text-2xl text-royal-purple opacity-70"></i>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow-card flex items-start justify-between">
+        <div>
+            <p class="text-sm font-medium text-gray-500">Revenue</p>
+            <p class="text-3xl font-bold text-gray-900">$525,80</p>
+            <p class="text-sm font-semibold text-green-500">+3.5% this month</p>
+        </div>
+        <i class="fas fa-dollar-sign text-2xl text-royal-purple opacity-70"></i>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow-card flex items-start justify-between">
+        <div>
+            <p class="text-sm font-medium text-gray-500">Errors</p>
+            <p class="text-3xl font-bold text-gray-900">153</p>
+            <p class="text-sm font-semibold text-red-500">+155 Errors</p>
+        </div>
+        <i class="fas fa-bug text-2xl text-royal-purple opacity-70"></i>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow-card flex items-start justify-between">
+        <div>
+            <p class="text-sm font-medium text-gray-500">Activity Logs</p>
+            <p class="text-3xl font-bold text-gray-900">5,230</p>
+            <a href="#" class="text-sm font-semibold text-royal-purple hover:text-light-purple transition duration-150">View All</a>
+        </div>
+        <i class="fas fa-list-alt text-2xl text-royal-purple opacity-70"></i>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    
+    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-card">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Sales Performance</h2>
+        <div class="h-80">
+            <canvas id="salesChart"></canvas>
+        </div>
+    </div>
+
+    <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-card relative">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Top Categories</h2>
+        <div class="h-80">
+            <canvas id="categoriesChart"></canvas>
+        </div>
+        <button class="absolute bottom-6 right-6 bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-150 text-sm">
+            Export Report
+        </button>
+    </div>
+</div>
+
+<div class="fixed bottom-6 right-6 bg-white p-4 rounded-xl shadow-card flex items-center space-x-3 border-l-4 border-yellow-500 z-50">
+    <i class="fas fa-bell text-xl text-yellow-500"></i>
+    <div>
+        <p class="text-sm font-semibold text-gray-800">Low stock alert</p>
+        <p class="text-xs text-gray-600">for "Wireless Earbuds"</p>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }} <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+<script>
+    // --- 1. Sales Performance Chart (Area Chart) ---
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    
+    // Gradient fill for the purple area
+    const salesGradient = salesCtx.createLinearGradient(0, 0, 0, 300);
+    salesGradient.addColorStop(0, 'rgba(106, 13, 173, 0.5)'); 
+    salesGradient.addColorStop(1, 'rgba(106, 13, 173, 0)');
+
+    new Chart(salesCtx, {
+        type: 'line',
+        data: {
+            labels: ['15th', '16th', '17th', '18th', '19th', '20th'],
+            datasets: [{
+                label: 'Sales ($)',
+                data: [150, 200, 450, 300, 550, 700],
+                backgroundColor: salesGradient,
+                borderColor: '#6A0DAD', 
+                borderWidth: 2,
+                pointRadius: 0,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { mode: 'index', intersect: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { display: false },
+                    ticks: { callback: function(value) { return value + '00'; } }
+                },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // --- 2. Top Categories Chart (Bar Chart) ---
+    const categoriesCtx = document.getElementById('categoriesChart').getContext('2d');
+    const purpleBarColor = '#6A0DAD';
+
+    new Chart(categoriesCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Electronics', 'Apparel', 'Books', 'Home Goods', 'Tools'],
+            datasets: [{
+                label: 'Categories',
+                data: [5, 7, 3, 9, 10],
+                backgroundColor: [
+                    purpleBarColor, purpleBarColor, purpleBarColor, purpleBarColor, purpleBarColor
+                ],
+                borderRadius: 8,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { mode: 'index', intersect: false }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { display: false }, ticks: { stepSize: 5 } },
+                x: { grid: { display: false }, barPercentage: 0.8, categoryPercentage: 0.8 }
+            }
+        }
+    });
+    
+</script>
+{% endblock %}

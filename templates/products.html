@@ -1,0 +1,185 @@
+{% extends "layout.html" %}
+
+{% block page_content %}
+<h1 class="text-3xl font-bold text-gray-800 mb-6">Product Management</h1>
+
+<!-- Flash Messages (Added for comprehensive feedback) -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="mb-4 p-4 rounded-xl text-sm {% if category == 'success' %}bg-green-100 text-green-700{% elif category == 'warning' %}bg-yellow-100 text-yellow-700{% else %}bg-red-100 text-red-700{% endif %}" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+<!-- End Flash Messages -->
+
+
+<div class="bg-white p-6 rounded-xl shadow-card">
+    
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
+        
+        <!-- UPDATED: Combined Filter and Search Form -->
+        <form method="GET" action="{{ url_for('products') }}" class="flex flex-col md:flex-row items-center space-y-3 md:space-y-0 md:space-x-4 w-full md:w-auto">
+            
+            <form method="GET" action="{{ url_for('products') }}" class="flex items-center space-x-4 w-full md:w-auto">
+    
+    <div class="relative flex items-center w-full md:w-64">
+        <i class="fas fa-search absolute left-3 text-gray-400"></i>
+        <input type="text" placeholder="Search" name="search" 
+                value="{{ search_term }}"
+                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-royal-purple focus:border-royal-purple transition duration-150 text-sm">
+    </div>
+    
+    <select name="category_id" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-royal-purple focus:border-royal-purple transition duration-150 text-sm appearance-none cursor-pointer">
+        <option value="0">All Categories</option>
+        {% for category in categories_filter_list %}
+        <option value="{{ category.id }}" {% if category_filter == category.id %}selected{% endif %}>
+            {{ category.name }}
+        </option>
+        {% endfor %}
+    </select>
+    
+    <button type="submit" class="text-sm font-medium text-gray-600 hover:text-royal-purple transition duration-150 hidden md:block">Filter</button>
+</form>
+
+            <!-- Search Input -->
+            <div class="relative flex items-center w-full md:w-64">
+                <i class="fas fa-search absolute left-3 text-gray-400"></i>
+                <!-- Using request.args.get('search', '') to handle the input value -->
+                <input type="text" placeholder="Search by name or SKU" name="search" 
+                        value="{{ request.args.get('search', '') }}"
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-royal-purple focus:border-royal-purple transition duration-150 text-sm">
+            </div>
+            
+            <!-- Submit Button (Always visible on mobile for filtering) -->
+            <button type="submit" class="w-full md:w-auto bg-royal-purple text-white font-semibold py-2 px-4 rounded-lg hover:bg-light-purple transition duration-200 block md:hidden">
+                <i class="fas fa-filter mr-2"></i> Apply Filter
+            </button>
+            <button type="submit" class="text-sm font-medium text-gray-600 hover:text-royal-purple transition duration-150 hidden md:block">Filter</button>
+        </form>
+        
+        <!-- Add New Product Button -->
+        <a href="{{ url_for('add_product') }}" class="w-full md:w-auto bg-royal-purple text-white font-semibold py-2 px-4 rounded-lg hover:bg-light-purple transition duration-200 flex items-center justify-center">
+            <i class="fas fa-plus mr-2"></i> Add New Product
+        </a>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th> 
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Variants</th> 
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for product in products %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% set primary_image = product.images | first if product.images else None %}
+                        {% if primary_image and primary_image.filename %}
+                            <img src="{{ url_for('static', filename='images/products/' + primary_image.filename) }}" 
+                                alt="{{ product.name }}" class="h-10 w-10 object-cover rounded-md border">
+                        {% elif product.image_filename %}
+                            <img src="{{ url_for('static', filename='images/products/' + product.image_filename) }}" 
+                                alt="{{ product.name }}" class="h-10 w-10 object-cover rounded-md border">
+                        {% else %}
+                            <span class="text-gray-400 text-xs">No Image</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ product.name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ product.sku }}</td>
+                    
+                    <!-- UPDATED: Display hierarchical category name -->
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <!-- Assumes product object now has category_full_name attribute from Flask route -->
+                        {{ product.category_full_name if product.category_full_name else 'Uncategorized' }}
+                    </td> 
+                    
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${{ "{:,.2f}".format(product.price) }}</td> 
+                    
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if product.stock < 20 %}
+                        <span class="px-3 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                            Low ({{ product.stock }})
+                        </span>
+                        {% else %}
+                        <span class="px-3 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            In Stock ({{ product.stock }})
+                        </span>
+                        {% endif %}
+                    </td>
+                    
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {% set variant_count = product.variants | length %}
+                        {% if variant_count > 0 %}
+                            <span class="text-royal-purple font-semibold">{{ variant_count }}</span>
+                        {% else %}
+                            <span class="text-gray-500">None</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                        <a href="{{ url_for('edit_product', product_id=product.id) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                        
+                        <form method="POST" action="{{ url_for('delete_product', product_id=product.id) }}" class="inline">
+                            <button type="submit" 
+                                    onclick="return confirm('Are you sure you want to delete product: {{ product.name }}?')"
+                                    class="text-red-600 hover:text-red-900 bg-red-100 px-2 py-1 rounded text-xs">
+                                Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="px-6 py-4 text-center text-gray-500"> No products found. {% if search_term %}Try clearing the search filter.{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if total_pages > 1 %}
+    {% set current_category_id = request.args.get('category_id') %}
+    <div class="mt-4 flex justify-between items-center text-sm text-gray-600">
+        <div>
+            Showing {{ offset + 1 }} to {{ offset + products|length }} of {{ total_products }} results
+        </div>
+        
+        <div class="flex space-x-1">
+            {% if page > 1 %}
+            <!-- UPDATED: Added category_id to pagination link -->
+            <a href="{{ url_for('products', page=page - 1, search=search_term, category_id=current_category_id) }}" class="px-3 py-1 border rounded-lg hover:bg-gray-100">&laquo;</a>
+            {% endif %}
+
+            {% for p in range(1, total_pages + 1) %}
+            <!-- UPDATED: Added category_id to pagination link -->
+            <a href="{{ url_for('products', page=p, search=search_term, category_id=current_category_id) }}" 
+               class="px-3 py-1 border rounded-lg 
+               {% if p == page %}bg-royal-purple text-white hover:bg-light-purple
+               {% else %}hover:bg-gray-100{% endif %}">
+                {{ p }}
+            </a>
+            {% endfor %}
+
+            {% if page < total_pages %}
+            <!-- UPDATED: Added category_id to pagination link -->
+            <a href="{{ url_for('products', page=page + 1, search=search_term, category_id=current_category_id) }}" class="px-3 py-1 border rounded-lg hover:bg-gray-100">&raquo;</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

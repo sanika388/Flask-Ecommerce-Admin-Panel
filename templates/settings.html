@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+
+{% block page_content %}
+<h1 class="text-3xl font-bold text-gray-800 mb-6">Application Settings</h1>
+
+<div class="bg-white p-6 rounded-xl shadow-card max-w-2xl">
+    
+    <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">General Configuration</h2>
+
+    <form action="/settings" method="POST" class="space-y-6">
+        
+        <div>
+            <label for="site_name" class="block text-sm font-medium text-gray-700">Site Name</label>
+            <input type="text" id="site_name" name="site_name" value="Admin E-commerce Panel" 
+                   class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-royal-purple focus:border-royal-purple">
+        </div>
+
+        <div>
+            <label for="items_per_page" class="block text-sm font-medium text-gray-700">Table Items Per Page</label>
+            <select id="items_per_page" name="items_per_page" 
+                    class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-royal-purple focus:border-royal-purple">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>
+        </div>
+        
+        <div class="pt-4 border-t">
+            <button type="submit" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition duration-200">
+                Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

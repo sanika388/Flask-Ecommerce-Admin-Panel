@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="flex min-h-screen">
+
+<!-- Sidebar - Assuming this holds navigation -->
+{% include 'includes/_sidebar.html' %} 
+
+<div id="main-content" class="flex-grow flex flex-col transition-all duration-300">
+    
+    <!-- Header - Assuming this holds the top bar/search/user info -->
+    {% include 'includes/_header.html' %} 
+
+    <!-- Flash Messages Container -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="fixed top-0 right-0 p-4 z-50 space-y-2">
+          {% for category, message in messages %}
+            <!-- Determine Tailwind color classes based on message category -->
+            {% set alert_color = {
+                'success': 'bg-green-100 border-green-400 text-green-700', 
+                'error': 'bg-red-100 border-red-400 text-red-700',
+                'info': 'bg-blue-100 border-blue-400 text-blue-700',
+                'warning': 'bg-yellow-100 border-yellow-400 text-yellow-700'
+              }.get(category, 'bg-gray-100 border-gray-400 text-gray-700') %}
+
+            <div class="border {{ alert_color }} px-4 py-3 rounded relative max-w-sm shadow-lg transition-opacity duration-300" role="alert" id="flash-{{ loop.index }}">
+              <strong class="font-bold capitalize mr-2">{{ category }}:</strong>
+              <span class="block sm:inline">{{ message }}</span>
+              
+              <!-- Dismiss Button (X icon) -->
+              <span class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onclick="document.getElementById('flash-{{ loop.index }}').style.opacity='0'; setTimeout(function(){ document.getElementById('flash-{{ loop.index }}').remove(); }, 300);">
+                <!-- Dynamic SVG color based on alert category -->
+                <svg class="fill-current h-6 w-6 {{ alert_color | replace('-100', '-500') | replace('-700', '-500') }}" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.168l-2.651 3.681a1.2 1.2 0 1 1-1.697-1.697l3.682-2.651-3.681-2.651a1.2 1.2 0 0 1 1.697-1.697L10 8.305l2.651-3.681a1.2 1.2 0 1 1 1.697 1.697L11.832 10l2.651 3.651a1.2 1.2 0 0 1 0 1.198z"/></svg>
+              </span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    
+    <!-- Main Content Area -->
+    <main class="flex-grow p-6">
+        {% block page_content %}
+        <!-- Content from inherited templates will go here -->
+        {% endblock %}
+    </main>
+</div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+<!-- Custom JavaScript inclusion -->
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+{% endblock %}

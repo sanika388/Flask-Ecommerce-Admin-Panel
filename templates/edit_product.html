@@ -1,0 +1,103 @@
+{% extends "layout.html" %}
+
+{% block page_content %}
+<h1 class="text-3xl font-bold text-gray-800 mb-6">Edit Product: {{ product.name }}</h1>
+
+<div class="bg-white p-6 rounded-xl shadow-card">
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="mb-4 p-4 rounded-xl text-sm {% if category == 'success' %}bg-green-100 text-green-700{% elif category == 'warning' %}bg-yellow-100 text-yellow-700{% else %}bg-red-100 text-red-700{% endif %}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('edit_product', product_id=product.id) }}" enctype="multipart/form-data">
+        
+        <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Core Information</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700">Product Name</label>
+                <input type="text" id="name" name="name" required
+                       class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-royal-purple focus:border-royal-purple transition duration-150"
+                       value="{{ product.name }}">
+            </div>
+
+            <div>
+                <label for="sku" class="block text-sm font-medium text-gray-700">SKU (Unique Identifier)</label>
+                <input type="text" id="sku" name="sku" required
+                       class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-royal-purple focus:border-royal-purple transition duration-150"
+                       value="{{ product.sku }}">
+            </div>
+            
+            <div>
+                <label for="price" class="block text-sm font-medium text-gray-700">Base Price ($)</label>
+                <input type="number" step="0.01" id="price" name="price" required
+                       class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-royal-purple focus:border-royal-purple transition duration-150"
+                       value="{{ product.price }}">
+            </div>
+            
+            <div>
+                <label for="category_id" class="block text-sm font-medium text-gray-700">Category</label>
+                <select id="category_id" name="category_id" 
+                         class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-royal-purple focus:border-royal-purple transition duration-150">
+                    <option value="">-- Select Category --</option>
+                    {% for cat in all_categories %}
+                        <option value="{{ cat.id }}" 
+                                {% if product.category_id == cat.id %}selected{% endif %}>
+                            {{ cat.full_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+            <textarea id="description" name="description" rows="4"
+                      class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-royal-purple focus:border-royal-purple transition duration-150">{{ product.description }}</textarea>
+        </div>
+        
+        <div class="mb-6 form-check p-3 border border-gray-200 rounded-lg bg-gray-50">
+            <input type="checkbox" class="form-check-input h-4 w-4 text-royal-purple border-gray-300 rounded focus:ring-royal-purple" 
+                   id="is_featured" name="is_featured"
+                   {% if product and product.is_featured %}checked{% endif %} >
+            <label class="form-check-label ml-2 text-sm font-semibold text-gray-700" for="is_featured">
+                **Feature this Product**
+            </label>
+            <p class="form-text text-xs text-gray-500 mt-1 ml-6">Check this box to highlight this product on the homepage or in promotions.</p>
+        </div>
+        <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Inventory (Fallback/Base)</h2>
+        <div class="mb-6">
+            <p class="text-sm text-gray-500 mb-2">Note: Initial Stock Quantity field is only used if no variants are added below. Stock is managed per variant if variants exist.</p>
+            <label for="stock" class="block text-sm font-medium text-gray-700">Initial Stock Quantity</label>
+            <input type="number" id="stock" name="stock" min="0" 
+                   class="mt-1 block w-1/2 md:w-1/4 border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-royal-purple focus:border-royal-purple transition duration-150"
+                   value="{{ product.stock }}">
+        </div>
+
+        <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">Images & Media</h2>
+        <div class="mb-6">
+            <p class="text-sm font-medium text-gray-700 mb-2">Current Images: ({{ images | length if images else 0 }})</p>
+            <label for="new_primary_image" class="block text-sm font-medium text-gray-700">Upload New Primary Image (Optional)</label>
+            <input type="file" id="new_primary_image" name="new_primary_image" accept="image/*"
+                   class="mt-1 block w-full file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-royal-purple file:text-white hover:file:bg-light-purple/90 transition duration-150 cursor-pointer">
+        </div>
+
+        <div class="mt-8 pt-4 border-t flex justify-end space-x-4">
+            <button type="button" onclick="window.history.back();" 
+                    class="bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-400 transition duration-200">
+                Cancel
+            </button>
+            <button type="submit" 
+                    class="bg-royal-purple text-white font-semibold py-2 px-4 rounded-lg hover:bg-light-purple transition duration-200">
+                Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

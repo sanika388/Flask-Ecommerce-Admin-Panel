@@ -1,0 +1,406 @@
+Project Report: Comprehensive E-commerce Admin Panel System
+
+
+
+1. Executive Summary
+This report details the technical architecture, database design, and operational guide for the E-commerce Admin Panel. Developed using Flask and MySQL, the system provides a robust, role-based platform for managing inventory, tracking orders, handling returns, and generating business intelligence reports. All database tables and seed data are consolidated into the accompanying SQL script, ensuring a streamlined setup process.
+
+2. Technical Stack and Core Architecture
+Component
+
+Technology
+
+Role and Implementation Detail
+
+Backend Framework
+
+Python (Flask)
+
+Handles routing, application logic, and secure session management.
+
+Database
+
+MySQL / SQLAlchemy ORM
+
+Provides persistent, structured storage for all E-commerce data. SQLAlchemy is used for Pythonic data interaction.
+
+Security
+
+Werkzeug Security
+
+Utilized for secure, one-way password hashing (pbkdf2:sha256) and login authentication.
+
+Frontend Styling
+
+Tailwind CSS
+
+Used exclusively for all visual components, ensuring a responsive, modern, and pixel-perfect design across all administrative views.
+
+File Handling
+
+secure_filename (Werkzeug)
+
+Ensures security during product image uploads by sanitizing filenames before storage.
+
+3. Database Design (ecom_admin_db)
+The database schema is designed for high data integrity and efficient querying, supporting complex features like product variants and detailed order history.
+
+3.1 Key Tables and Relationships
+Table Name
+
+Purpose
+
+Key Relationships and Fixes
+
+users
+
+Core authentication and role-based access.
+
+Includes the necessary phone column fix to support all user profile views.
+
+products
+
+Central repository for all inventory items.
+
+Linked to categories, product_variants, and product_images.
+
+product_images
+
+Stores secure filenames for uploaded product images.
+
+Supports multiple images per product.
+
+orders
+
+Transaction history and fulfillment tracking.
+
+Includes payment_status and transaction_id (critical fixes) for comprehensive financial tracking.
+
+order_items
+
+Stores line-item details for each order.
+
+Many-to-one relationship with orders and products.
+
+discounts
+
+Coupon management, tracking type, value, and usage limits.
+
+Referenced during checkout logic.
+
+returns / return_items
+
+Manages and tracks product return requests.
+
+Linked to original orders and users.
+
+3.2 Complete SQL Schema (complete_schema.sql)
+The following SQL script is complete, self-contained, and ready to be executed in MySQL Workbench to create the full database structure, including all necessary foreign keys, data types, and seed data.
+
+-- HEADING: Complete E-commerce Admin Database Setup (MySQL)
+-- PURPOSE: Defines the entire relational schema for the E-commerce Admin Panel, including Users, Inventory, Orders, Returns, and Reviews.
+
+-- =========================================================================
+-- 1. DATABASE INITIALIZATION
+-- =========================================================================
+
+CREATE DATABASE IF NOT EXISTS ecom_admin_db;
+USE ecom_admin_db;
+
+
+-- =========================================================================
+-- 2. CORE ENTITIES (NO FOREIGN KEY DEPENDENCIES)
+-- =========================================================================
+
+-- 2a. USERS TABLE SETUP (Authentication & Profile)
+DROP TABLE IF EXISTS users;
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL DEFAULT 'Customer', -- e.g., 'Admin', 'Staff', 'Customer'
+    phone VARCHAR(20) NULL, -- CRITICAL FIX: Added 'phone' column
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2b. CATEGORIES TABLE
+DROP TABLE IF EXISTS categories;
+CREATE TABLE categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    parent_id INT NULL,
+    CONSTRAINT fk_parent_category
+        FOREIGN KEY (parent_id)
+        REFERENCES categories (id)
+        ON DELETE SET NULL
+);
+
+-- 2c. DISCOUNTS TABLE
+DROP TABLE IF EXISTS discounts;
+CREATE TABLE discounts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    description VARCHAR(255),
+    type ENUM('percentage', 'fixed', 'free_shipping') NOT NULL,
+    value DECIMAL(10, 2) NOT NULL,
+    min_purchase_amount DECIMAL(10, 2) DEFAULT 0.00,
+    max_usage INT DEFAULT NULL,
+    used_count INT DEFAULT 0,
+    start_date DATE NOT NULL,
+    expiry_date DATE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- =========================================================================
+-- 3. INVENTORY TABLES (PRODUCT STRUCTURE)
+-- =========================================================================
+
+-- 3a. PRODUCTS TABLE
+DROP TABLE IF EXISTS products;
+CREATE TABLE products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    sku VARCHAR(100) NOT NULL UNIQUE,
+    price DECIMAL(10, 2) NOT NULL,
+    stock INT NOT NULL DEFAULT 0,
+    description TEXT,
+    is_featured BOOLEAN NOT NULL DEFAULT FALSE,
+    category_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
+);
+
+-- 3b. PRODUCT VARIANTS TABLE
+DROP TABLE IF EXISTS product_variants;
+CREATE TABLE product_variants (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT NOT NULL,
+    attribute_name VARCHAR(50) NOT NULL,
+    attribute_value VARCHAR(50) NOT NULL,
+    additional_price DECIMAL(10, 2) DEFAULT 0.00,
+    stock INT NOT NULL DEFAULT 0,
+    UNIQUE KEY unique_variant (product_id, attribute_name, attribute_value),
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
+-- 3c. PRODUCT IMAGES TABLE
+DROP TABLE IF EXISTS product_images;
+CREATE TABLE product_images (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT NOT NULL,
+    filename VARCHAR(255) NOT NULL,
+    display_order INT NOT NULL DEFAULT 1,
+    UNIQUE KEY unique_image (product_id, filename),
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
+-- 3d. PRODUCT REVIEWS TABLE
+DROP TABLE IF EXISTS product_reviews;
+CREATE TABLE product_reviews (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT NOT NULL,
+    user_id INT NOT NULL,
+    rating TINYINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    review_title VARCHAR(255),
+    review_text TEXT NOT NULL,
+    admin_reply TEXT,
+    status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+-- =========================================================================
+-- 4. TRANSACTION TABLES (ORDERS AND RETURNS)
+-- =========================================================================
+
+-- 4a. ORDERS TABLE
+DROP TABLE IF EXISTS order_items;
+DROP TABLE IF EXISTS orders;
+
+CREATE TABLE orders (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    customer_name VARCHAR(100) NULL,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    order_status ENUM('Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled') DEFAULT 'Pending',
+    payment_status VARCHAR(50) NOT NULL DEFAULT 'Pending', -- CRITICAL FIX
+    transaction_id VARCHAR(255) NULL, -- CRITICAL FIX
+    shipping_address TEXT,
+    order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT
+);
+
+-- 4b. ORDER ITEMS TABLE
+CREATE TABLE order_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    price_at_sale DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT
+);
+
+-- 4c. RETURNS TABLE
+DROP TABLE IF EXISTS return_items;
+DROP TABLE IF EXISTS returns;
+
+CREATE TABLE returns (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    user_id INT NOT NULL,
+    return_reason TEXT,
+    return_status ENUM('Requested', 'In Transit', 'Received', 'Processing', 'Refunded', 'Rejected') NOT NULL DEFAULT 'Requested',
+    refund_amount DECIMAL(10, 2) DEFAULT 0.00,
+    return_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    processed_at TIMESTAMP NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT
+);
+
+-- 4d. RETURN ITEMS TABLE
+CREATE TABLE return_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    return_id INT NOT NULL,
+    order_item_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    reason TEXT,
+    price_at_return DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (return_id) REFERENCES returns(id) ON DELETE CASCADE,
+    FOREIGN KEY (order_item_id) REFERENCES order_items(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT
+);
+
+
+-- =========================================================================
+-- 5. DATA SEEDING AND CRITICAL TEST DATA
+-- =========================================================================
+
+-- 5a. ADMIN USER INSERTION
+DELETE FROM users WHERE email = 'admin@ecom.com';
+
+-- IMPORTANT: The password is 'finalpassword123'.
+-- !!! CRITICAL: REPLACE THE HASH BELOW with the actual hash generated for 'finalpassword123' in your Python environment.
+INSERT INTO users (id, name, email, password_hash, role, phone)
+VALUES (
+    1,
+    'System Administrator',
+    'admin@ecom.com',
+    'pbkdf2:sha256:1000000$NEW_PASSWORD_HASH_FOR_finalpassword123$REPLACE_ME_NOW',
+    'Admin',
+    '5555551234'
+);
+
+-- 5b. TEST PRODUCT INSERTION
+INSERT IGNORE INTO products (id, name, sku, price, stock) VALUES
+(1, 'Laptop Pro', 'LAP001', 1200.00, 50),
+(2, 'Wireless Keyboard', 'KEY002', 75.00, 150);
+
+-- 5c. TEST ORDER INSERTION
+DELETE FROM order_items WHERE order_id = 1;
+DELETE FROM orders WHERE id = 1;
+INSERT INTO orders (id, user_id, customer_name, total_amount, order_status, payment_status)
+VALUES (1, 1, 'Admin Customer', 500.00, 'Processing', 'Paid');
+INSERT INTO order_items (order_id, product_id, quantity, price_at_sale)
+VALUES
+    (1, 1, 3, 100.00),
+    (1, 2, 1, 200.00);
+COMMIT;
+
+
+-- =========================================================================
+-- 6. FINAL VERIFICATION COMMANDS
+-- =========================================================================
+
+DESCRIBE users;
+SELECT id, name, email, role FROM users WHERE id = 1;
+SELECT * FROM orders WHERE id = 1;
+
+3.2 Application Execution
+Virtual Environment: Create and activate a Python virtual environment.
+
+Bash
+
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+Install Dependencies: Install all necessary packages (Flask, SQLAlchemy, etc.)
+
+Bash
+
+pip install -r requirements.txt
+Run the Application: Start the Flask server.
+
+Bash
+
+flask run
+Access: Open your web browser and navigate to the application address (e.g., http://127.0.0.1:5000/).
+
+
+
+
+
+4. How to Use and Run the Admin Panel
+This section provides the necessary steps for reviewers and operators to launch and access the application.
+
+4.1 Prerequisites
+Ensure you have:
+
+Python 3.x installed.
+
+MySQL Server running locally.
+
+All required Python dependencies installed (e.g., Flask, Flask-SQLAlchemy, Werkzeug).
+
+4.2 Step-by-Step Execution Guide
+Database Initialization:
+
+Open MySQL Workbench (or your preferred MySQL client).
+
+Execute the entire SQL code provided in Section 3.2. This step initializes the database ecom_admin_db and populates the crucial users, products, and orders tables.
+
+Generate Password Hash (CRITICAL STEP):
+
+The password hash for finalpassword123 must be generated by your Python application's security module.
+
+Action Required: Run a Python script snippet using werkzeug.security.generate_password_hash('finalpassword123') and replace the placeholder hash in the complete_schema.sql file's Section 5a with the actual outputted hash string.
+
+Application Startup:
+
+Ensure all necessary Python dependencies are installed (pip install -r requirements.txt).
+
+Run the main application file (e.g., flask run or python app.py).
+
+Access and Login:
+
+Open your web browser and navigate to the local application address (typically http://127.0.0.1:5000/).
+
+You will be redirected to the login page. Use the following credentials:
+
+Login Field
+
+Value
+
+Username (Email)
+
+admin@ecom.com
+
+Password
+
+finalpassword123
+
+4.3 Post-Login Navigation
+Upon successful login, the administrator will be directed to the main Dashboard, featuring:
+
+Inventory Panel: Use the menu to add new products, manage variants, and track stock levels.
+
+Orders Panel: View Order ID 1 (which was pre-seeded as test data) to verify the order tracking features and the calculation of "Total Items" from the order_items table.
+
+Reports: Access the custom CSV export function to generate an order report, confirming the application's ability to aggregate data across multiple tables (orders, users, order_items).
